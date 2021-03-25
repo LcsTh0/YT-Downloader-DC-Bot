@@ -144,7 +144,7 @@ async def on_message(msg):
                         video = moviepy.editor.VideoFileClip(path + "/" + title_patched + ".mp4")
                         video.audio.write_audiofile(path + "/" + title_patched + ".mp3")
                         with open(log, "a") as f:
-                            f.write(f"{timedate}Done with: {yt.title} (Audio))\n")
+                            f.write(f"{timedate}Done with: {yt.title} (Audio)\n")
 
                         print(timedate + "Done with: " + yt.title + " (Audio)")
 
