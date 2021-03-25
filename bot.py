@@ -22,7 +22,7 @@ server_log = "server_log.txt"
 msg_log = "msg_log.txt"
 log = "log.txt"
 purged_log = "purged_log.txt"
-del_vids_script = "/home/del_vids.sh"
+del_vids_script = "/home/ec2-user/del_vids.sh"
 reload_scirpt = "/home/ec2-user/reload.sh"
 purge_time = "03:00"
 bot_name = "LcsTh's YT Downloader"
@@ -44,9 +44,9 @@ async def dc_purge():
             await channel.purge()
             system("bash " + del_vids_script)
 
-            f = open(purged_log, "a")
-            f.write(timedate + "Auto Purge!\n")
-            f.close()
+            with open(purged_log, "a") as f:
+                f.write(f"{timedate} Auto Purge\n")
+
             print(timedate + "Auto Purge!\n")
             await asyncio.sleep(500)
         else:
@@ -69,10 +69,8 @@ async def on_message(msg):
                 url=dc_invite, color=0x00ff26)
             embed.set_footer(text=bot_name)
             await msg.channel.send(embed=embed)
-            f = open(msg_log, "a")
-            logged = timedate + str(msg.channel) + "\n"
-            f.write(logged)
-            f.close()
+            with open(msg_log, "a") as f:
+                f.write(f"{timedate + str(msg.channel)} \n")
             print(timedate + str(msg.channel))
 
         elif str(msg.guild.id) != server_id:
@@ -82,13 +80,12 @@ async def on_message(msg):
             embed.set_footer(text=bot_name)
             await msg.channel.send(embed=embed)
 
-            f = open(server_log, "a")
             logged = "Channel: " + msg.channel.name + "\nBenutzer: " + msg.author.name + "#" + str(
                 msg.author.discriminator) + " (" + str(
                 msg.author.id) + ")\nServer Name: " + msg.guild.name + "\nID: " + str(
                 msg.guild.id) + "\nMitglieder: " + str(msg.guild.member_count) + "\n\n"
-            f.write(timedate + "\n" + logged)
-            f.close()
+            with open(server_log, "a") as f:
+                f.write(f"{logged}\n")
 
         else:
             def is_me(m):
@@ -101,12 +98,11 @@ async def on_message(msg):
                 else:
                     delete = await msg.channel.purge(limit=1)
                     await msg.channel.send(keine_rechte_nachricht + "{}".format(msg.author.mention))
-                    f = open(log, "a")
-                    f.write(
-                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat versucht " + purge_command + " auszuführen!\n")
-                    f.close()
+                    with open(log, "a") as f:
+                        f.write(
+                            f"{timedate}{msg.author.name} # {msg.author.discriminator} hat versucht {purge_command} auszuführen!\n")
                     print(
-                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat versucht $purge auszuführen!\n")
+                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat versucht " + purge_command + " auszuführen!\n")
                     await asyncio.sleep(5)
                     delete = await msg.channel.purge(limit=1)
             else:
@@ -115,7 +111,8 @@ async def on_message(msg):
                 if msg.author == client.user:
                     return
 
-                if str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(help_command2):
+                if str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(
+                        help_command2):
                     await msg.channel.send(command + " <URL>")
                     await msg.channel.send
 
@@ -129,11 +126,8 @@ async def on_message(msg):
                         url = msg.content.split(' ')[1]
                         yt = pytube.YouTube(url)
 
-                        f = open(log, "a")
-
-                        f.write(
-                            timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")\n")
-                        f.close()
+                        with open(log, "a") as f:
+                            f.write(f"{timedate}Downloading: {yt.title} (Requested by {msg.author.name})\n")
 
                         print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")\n")
 
@@ -149,9 +143,8 @@ async def on_message(msg):
                         print(title_patched)
                         video = moviepy.editor.VideoFileClip(path + "/" + title_patched + ".mp4")
                         video.audio.write_audiofile(path + "/" + title_patched + ".mp3")
-                        f = open(log, "a")
-                        f.write(timedate + "Done with: " + yt.title + " (Audio)")
-                        f.close()
+                        with open(log, "a") as f:
+                            f.write(f"{timedate}Done with: {yt.title} (Audio))\n")
 
                         print(timedate + "Done with: " + yt.title + " (Audio)")
 
@@ -178,11 +171,8 @@ async def on_message(msg):
                         url = msg.content.split(' ')[1]
                         yt = pytube.YouTube(url)
 
-                        f = open(log, "a")
-
-                        f.write(
-                            timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")\n")
-                        f.close()
+                        with open(log, "a") as f:
+                            f.write(f"{timedate}Downloading: {yt.title} (Requested by {msg.author.name})\n")
 
                         print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")\n")
 
@@ -195,9 +185,9 @@ async def on_message(msg):
                         title_patched = title_patched.replace("\\", "_")
                         yt.streams.filter(progressive=True).get_highest_resolution().download(output_path=path,
                                                                                               filename=title_patched)
-                        f = open(log, "a")
-                        f.write(timedate + "Done with: " + yt.title)
-                        f.close()
+
+                        with open(log, "a") as f:
+                            f.write(f"{timedate}Done with: {yt.title}\n")
 
                         print(timedate + "Done with: " + yt.title)
 
