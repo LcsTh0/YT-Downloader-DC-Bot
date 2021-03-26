@@ -172,10 +172,11 @@ async def on_message(msg):
                         link = http + ip_domain + "/" + title_patched
 
                         delete = await msg.channel.purge(limit=1, check=is_me)
-
+                        
+                        auflösung = yt.streams.filter(progressive=True).get_highest_resolution().resolution
                         embed = discord.Embed(
                             title="Video „" + yt.title + "“ von „" + yt.author + "“ heruntergeladen",
-                            description="[Video](" + link + ".mp4" + ") | [Audio](" + link + ".mp3" + ")", color=0x00ff26)
+                            description="[Video](" + link + ".mp4" + ") (" + auflösung + ") | [Audio](" + link + ".mp3" + ")", color=0x00ff26)
                         embed.set_footer(text=bot_name)
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
