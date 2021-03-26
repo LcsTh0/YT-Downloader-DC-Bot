@@ -9,28 +9,36 @@ import moviepy.editor
 datetime_ = datetime.datetime.now()
 timedate = datetime_.strftime('%d.%m.%Y-%H.%M.%S' + ": ")
 
+bot_name = "LcsTh's YT Downloader"
+
+dc_invite = "https://discord.gg/PQwPRDj"
+
 http = "https://"
 ip_domain = "lcsth.de"
-command = "$yt"
-audio_command = "$audio"
-path = "http-data"
-dc_invite = "https://discord.gg/PQwPRDj"
+
 server_id = "570967338946527262"
 channel_id = "823996526966734849"
+
+path = "http-data"
+token_path = "/home/ec2-user/dc-token.txt"
 server_log = "server_log.txt"
 msg_log = "msg_log.txt"
 log = "log.txt"
 purged_log = "purged_log.txt"
+
 del_vids_script = "/home/ec2-user/del_vids.sh"
 reload_scirpt = "/home/ec2-user/reload.sh"
-token_path = "/home/ec2-user/dc-token.txt"
+
 purge_time = "03:00"
-bot_name = "LcsTh's YT Downloader"
+
 falscher_discord_nachricht = "Dieser Bot kann momentan nur auf dem ApfelPlayer Discord verwendet werdent. Wenn ein anderer Server den Bot benutzen will, kann der Besitzer mir (LcsTh#9195) gerne eine Nachricht schreiben."
 keine_rechte_nachricht = "Dazu hast du keine Rechte"
+
+command = "$yt"
+audio_command = "$audio"
+purge_command = "$purge"
 help_command = "$help"
 help_command2 = "$hilfe"
-purge_command = "$purge"
 
 client = discord.Client()
 
@@ -47,7 +55,7 @@ async def dc_purge():
             with open(purged_log, "a") as f:
                 f.write(f"{timedate} Auto Purge\n")
 
-            print(timedate + "Auto Purge!\n")
+            print(timedate + "Auto Purge!")
             await asyncio.sleep(500)
         else:
             await asyncio.sleep(50)
@@ -99,6 +107,13 @@ async def on_message(msg):
                 if msg.author.guild_permissions.administrator:
                     deleted = await msg.channel.purge()
                     system("bash " + del_vids_script)
+                    with open(log, "a") as f:
+                        f.write(
+                            f"{timedate}{msg.author.name} # {msg.author.discriminator} hat {purge_command} ausgeführt!\n")
+
+                        print(
+                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat " + purge_command + " ausgeführt!")
+
                 else:
                     delete = await msg.channel.purge(limit=1)
                     await msg.channel.send(keine_rechte_nachricht + "{}".format(msg.author.mention))
@@ -106,7 +121,7 @@ async def on_message(msg):
                         f.write(
                             f"{timedate}{msg.author.name} # {msg.author.discriminator} hat versucht {purge_command} auszuführen!\n")
                     print(
-                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat versucht " + purge_command + " auszuführen!\n")
+                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat versucht " + purge_command + " auszuführen!")
                     await asyncio.sleep(5)
                     delete = await msg.channel.purge(limit=1)
             else:
@@ -120,52 +135,8 @@ async def on_message(msg):
                     await msg.channel.send(command + " <URL>")
                     await msg.channel.send
 
-                if str(msg.content).lower().startswith(audio_command):
-                    if str(msg.content).lower() == audio_command:
-                        await msg.channel.send(audio_command + " <URL>")
-
-                    else:
-                        system("bash /home/ec2-user/reload")
-
-                        url = msg.content.split(' ')[1]
-                        yt = pytube.YouTube(url)
-
-                        with open(log, "a") as f:
-                            f.write(f"{timedate}Downloading: {yt.title} (Requested by {msg.author.name})\n")
-
-                        print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")\n")
-
-                        await msg.channel.send("Starte Herunterladen {}".format(msg.author.mention))
-                        title_patched = urllib.parse.quote(yt.title).replace("%", "_")
-                        for numbers in title_patched:
-                            if numbers.isdigit():
-                                title_patched = title_patched.replace(numbers, "")
-                        title_patched = title_patched.replace("/", "_")
-                        title_patched = title_patched.replace("\\", "_")
-                        yt.streams.filter(progressive=True).get_highest_resolution().download(output_path=path,
-                                                                                              filename=title_patched)
-                        print(title_patched)
-                        video = moviepy.editor.VideoFileClip(path + "/" + title_patched + ".mp4")
-                        video.audio.write_audiofile(path + "/" + title_patched + ".mp3")
-                        with open(log, "a") as f:
-                            f.write(f"{timedate}Done with: {yt.title} (Audio)\n")
-
-                        print(timedate + "Done with: " + yt.title + " (Audio)")
-
-                        link = http + ip_domain + "/" + title_patched + ".mp3"
-
-                        delete = await msg.channel.purge(limit=1, check=is_me)
-
-                        embed = discord.Embed(
-                            title="Audio „" + yt.title + "“ von „" + yt.author + "“ fertig heruntergeladen", url=link,
-                            color=0x00ff26)
-                        embed.set_footer(text=bot_name)
-                        await msg.channel.send(embed=embed)
-                        await msg.channel.send("{}".format(msg.author.mention))
-
-                        delete = await msg.channel.purge(limit=1, check=is_me)
-
-                elif str(msg.content).lower().startswith(command):
+            
+                elif str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command):
                     if str(msg.content).lower() == command:
                         await msg.channel.send(command + " <URL>")
 
@@ -178,7 +149,7 @@ async def on_message(msg):
                         with open(log, "a") as f:
                             f.write(f"{timedate}Downloading: {yt.title} (Requested by {msg.author.name})\n")
 
-                        print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")\n")
+                        print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")")
 
                         await msg.channel.send("Starte Herunterladen {}".format(msg.author.mention))
                         title_patched = urllib.parse.quote(yt.title).replace("%", "_")
@@ -190,18 +161,21 @@ async def on_message(msg):
                         yt.streams.filter(progressive=True).get_highest_resolution().download(output_path=path,
                                                                                               filename=title_patched)
 
+                        video = moviepy.editor.VideoFileClip(path + "/" + title_patched + ".mp4")
+                        video.audio.write_audiofile(path + "/" + title_patched + ".mp3")
+
                         with open(log, "a") as f:
                             f.write(f"{timedate}Done with: {yt.title}\n")
 
                         print(timedate + "Done with: " + yt.title)
 
-                        link = http + ip_domain + "/" + title_patched + ".mp4"
+                        link = http + ip_domain + "/" + title_patched
 
                         delete = await msg.channel.purge(limit=1, check=is_me)
 
                         embed = discord.Embed(
-                            title="Video „" + yt.title + "“ von „" + yt.author + "“ fertig heruntergeladen", url=link,
-                            color=0x00ff26)
+                            title="Video „" + yt.title + "“ von „" + yt.author + "“ heruntergeladen",
+                            description="[Video](" + link + ".mp4" + ") | [Audio](" + link + ".mp3" + ")", color=0x00ff26)
                         embed.set_footer(text=bot_name)
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
