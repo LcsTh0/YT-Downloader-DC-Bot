@@ -68,6 +68,7 @@ with open(token_path, "r") as f:
 @client.event
 async def on_ready():
     print("'{0.user}' has logged in!".format(client))
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=help_command))
     await dc_purge()
 
 
@@ -105,7 +106,7 @@ async def on_message(msg):
 
             if str(msg.content).lower() == purge_command:
                 if msg.author.guild_permissions.administrator:
-                    deleted = await msg.channel.purge()
+                    await msg.channel.purge()
                     system("bash " + del_vids_script)
                     with open(log, "a") as f:
                         f.write(
@@ -115,7 +116,7 @@ async def on_message(msg):
                         timedate + msg.author.name + "#" + msg.author.discriminator + " hat " + purge_command + " ausgeführt!")
 
                 else:
-                    delete = await msg.channel.purge(limit=1)
+                    await msg.channel.purge(limit=1)
                     await msg.channel.send(keine_rechte_nachricht + "{}".format(msg.author.mention))
                     with open(log, "a") as f:
                         f.write(
@@ -123,7 +124,7 @@ async def on_message(msg):
                     print(
                         timedate + msg.author.name + "#" + msg.author.discriminator + " hat versucht " + purge_command + " auszuführen!")
                     await asyncio.sleep(5)
-                    delete = await msg.channel.purge(limit=1)
+                    await msg.channel.purge(limit=1)
             else:
                 if str(msg.channel.id) != channel_id:
                     return
@@ -171,7 +172,7 @@ async def on_message(msg):
 
                         link = http + ip_domain + "/" + title_patched
 
-                        delete = await msg.channel.purge(limit=1, check=is_me)
+                        await msg.channel.purge(limit=1, check=is_me)
                         
                         auflösung = yt.streams.filter(progressive=True).get_highest_resolution().resolution
                         embed = discord.Embed(
@@ -181,7 +182,7 @@ async def on_message(msg):
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
 
-                        delete = await msg.channel.purge(limit=1, check=is_me)
+                        await msg.channel.purge(limit=1, check=is_me)
 
                 else:
                     return
