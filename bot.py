@@ -11,7 +11,6 @@ timedate = datetime_.strftime('%d.%m.%Y-%H.%M.%S' + ": ")
 
 http = "https://"
 ip_domain = "lcsth.de"
-token = ""
 command = "$yt"
 audio_command = "$audio"
 path = "http-data"
@@ -24,6 +23,7 @@ log = "log.txt"
 purged_log = "purged_log.txt"
 del_vids_script = "/home/ec2-user/del_vids.sh"
 reload_scirpt = "/home/ec2-user/reload.sh"
+token_path = "/home/ec2-user/dc-token.txt"
 purge_time = "03:00"
 bot_name = "LcsTh's YT Downloader"
 falscher_discord_nachricht = "Dieser Bot kann momentan nur auf dem ApfelPlayer Discord verwendet werdent. Wenn ein anderer Server den Bot benutzen will, kann der Besitzer mir (LcsTh#9195) gerne eine Nachricht schreiben."
@@ -51,6 +51,10 @@ async def dc_purge():
             await asyncio.sleep(500)
         else:
             await asyncio.sleep(50)
+
+
+with open(token_path, "r") as f:
+    token = f.readline()
 
 
 @client.event
