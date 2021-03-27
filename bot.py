@@ -19,6 +19,8 @@ ip_domain = "lcsth.de"
 
 server_id = "570967338946527262"
 channel_id = "823996526966734849"
+test_server_id = "825350098603081750"
+test_channel_id = "825350098603081753"
 
 path = "/home/ec2-user/http-data"
 token_path = "/home/ec2-user/dc-token.txt"
@@ -40,23 +42,27 @@ help_command2 = "$hilfe"
 
 client = discord.Client()
 
+async def purge_all():
+    channel = client.get_channel(int(channel_id))
+    test_channel = client.get_channel(int(test_channel_id))
+    await channel.purge()
+    await test_channel.purge()
+    for file in os.listdir(path):
+        if file.endswith(".mp4") or file.endswith(".mp3"):
+            os.remove(path + "/" + file)
 
 async def dc_purge():
-    channel = client.get_channel(int(channel_id))
     while True:
         zeit = datetime.datetime.now()
         stundeminute = zeit.strftime('%H:%M')
-        
+
         if str(stundeminute) == purge_time:
-            await channel.purge()
-            for file in os.listdir(path):
-              if file.endswith(".mp4") or file.endswith(".mp3"):
-                   os.remove(path + "/" + file)
+            await purge_all()
             with open(purged_log, "a") as f:
                 f.write(f"{timedate} Auto Purge\n")
             print(timedate + "Auto Purge!")
             await asyncio.sleep(500)
-        
+
         else:
             await asyncio.sleep(50)
             
@@ -70,6 +76,10 @@ with open(token_path, "r") as f:
 async def on_ready():
     print("'{0.user}' has logged in!".format(client))
     await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=command))
+    await purge_all()
+    with open(purged_log, "a") as f:
+        f.write(f"{timedate} Start Purge\n")
+    print(timedate + "Start Purge!")
     await dc_purge()
 
 
@@ -77,7 +87,7 @@ async def on_ready():
 async def on_message(msg):
     if msg.author != client.user:
         if isinstance(msg.channel, discord.channel.DMChannel):
-
+            
             embed = discord.Embed(
                 title=falscher_discord_nachricht,
                 description="[ApfelPlayer Discord](" + dc_invite + ") | [GitHub](" + github + ")", color=0x00ff26)
@@ -87,10 +97,10 @@ async def on_message(msg):
                 f.write(f"{timedate + str(msg.channel)} \n")
             print(timedate + str(msg.channel))
 
-        elif str(msg.guild.id) != server_id:
+        elif str(msg.guild.id) != server_id and str(msg.guild.id) != test_server_id:
             embed = discord.Embed(
                 title=falscher_discord_nachricht,
-                url=dc_invite, color=0x00ff26)
+                description="[ApfelPlayer Discord](" + dc_invite + ") | [GitHub](" + github + ")", color=0x00ff26)
             embed.set_footer(text=bot_name)
             await msg.channel.send(embed=embed)
 
@@ -109,14 +119,14 @@ async def on_message(msg):
                 if msg.author.guild_permissions.administrator:
                     await msg.channel.purge()
                     for file in os.listdir(path):
-                       if file.endswith(".mp4") or file.endswith(".mp3"):
-                          os.remove(path + "/" + file)
+                        if file.endswith(".mp4") or file.endswith(".mp3"):
+                            os.remove(path + "/" + file)
                     with open(log, "a") as f:
                         f.write(
                             f"{timedate}{msg.author.name} # {msg.author.discriminator} hat {purge_command} ausgeführt!\n")
 
                         print(
-                        timedate + msg.author.name + "#" + msg.author.discriminator + " hat " + purge_command + " ausgeführt!")
+                            timedate + msg.author.name + "#" + msg.author.discriminator + " hat " + purge_command + " ausgeführt!")
 
                 else:
                     await msg.channel.purge(limit=1)
@@ -129,8 +139,12 @@ async def on_message(msg):
                     await asyncio.sleep(5)
                     await msg.channel.purge(limit=1)
             else:
-                if str(msg.channel.id) != channel_id:
-                    return
+                if str(msg.channel.id) != channel_id and str(msg.channel.id) != test_channel_id:
+                    if str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command) or str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(help_command2):
+                        await msg.channel.purge(limit=1)
+                        return
+                    else:
+                        return
                 if msg.author == client.user:
                     return
 
@@ -139,13 +153,16 @@ async def on_message(msg):
                     await msg.channel.send(command + " <URL>")
                     await msg.channel.send
 
-            
+
                 elif str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command):
                     if str(msg.content).lower() == command:
                         await msg.channel.send(command + " <URL>")
 
                     else:
                         os.system("docker restart httpd")
+                        usr = msg.author
+                        def is_user(m):
+                            return m.author == usr
 
                         url = msg.content.split(' ')[1]
                         yt = pytube.YouTube(url)
@@ -176,16 +193,18 @@ async def on_message(msg):
                         link = http + ip_domain + "/" + title_patched
 
                         await msg.channel.purge(limit=1, check=is_me)
-                        
+
                         auflösung = yt.streams.filter(progressive=True).get_highest_resolution().resolution
                         embed = discord.Embed(
                             title="Video „" + yt.title + "“ von „" + yt.author + "“ heruntergeladen",
-                            description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")", color=0x00ff26)
+                            description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")",
+                            color=0x00ff26)
                         embed.set_footer(text=bot_name)
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
 
                         await msg.channel.purge(limit=1, check=is_me)
+                        await msg.channel.purge(check=is_user)
 
                 else:
                     return
