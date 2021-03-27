@@ -11,6 +11,7 @@ timedate = datetime_.strftime('%d.%m.%Y-%H.%M.%S' + ": ")
 
 bot_name = "LcsTh's YT Downloader"
 
+github = "https://github.com/LcsTh0/YT-Downloader-DC-Bot"
 dc_invite = "https://discord.gg/PQwPRDj"
 
 http = "https://"
@@ -47,18 +48,19 @@ async def dc_purge():
     channel = client.get_channel(int(channel_id))
     while True:
         zeit = datetime.datetime.now()
-        dt = zeit.strftime('%H:%M')
-        if str(dt) == purge_time:
+        stundeminute = zeit.strftime('%H:%M')
+        
+        if str(stundeminute) == purge_time:
             await channel.purge()
             system("bash " + del_vids_script)
-
             with open(purged_log, "a") as f:
                 f.write(f"{timedate} Auto Purge\n")
-
             print(timedate + "Auto Purge!")
             await asyncio.sleep(500)
+        
         else:
             await asyncio.sleep(50)
+            
 
 
 with open(token_path, "r") as f:
@@ -68,7 +70,7 @@ with open(token_path, "r") as f:
 @client.event
 async def on_ready():
     print("'{0.user}' has logged in!".format(client))
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=help_command))
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.listening, name=command))
     await dc_purge()
 
 
@@ -79,7 +81,7 @@ async def on_message(msg):
 
             embed = discord.Embed(
                 title=falscher_discord_nachricht,
-                url=dc_invite, color=0x00ff26)
+                description="[ApfelPlayer Discord](" + dc_invite + ") | [GitHub](" + github + ")", color=0x00ff26)
             embed.set_footer(text=bot_name)
             await msg.channel.send(embed=embed)
             with open(msg_log, "a") as f:
@@ -177,7 +179,7 @@ async def on_message(msg):
                         auflösung = yt.streams.filter(progressive=True).get_highest_resolution().resolution
                         embed = discord.Embed(
                             title="Video „" + yt.title + "“ von „" + yt.author + "“ heruntergeladen",
-                            description="[Video](" + link + ".mp4" + ") (" + auflösung + ") | [Audio](" + link + ".mp3" + ")", color=0x00ff26)
+                            description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")", color=0x00ff26)
                         embed.set_footer(text=bot_name)
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
