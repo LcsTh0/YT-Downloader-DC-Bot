@@ -2,7 +2,7 @@ import asyncio
 import discord
 import pytube
 import datetime
-from os import system
+import os
 import urllib.parse
 import moviepy.editor
 
@@ -20,15 +20,12 @@ ip_domain = "lcsth.de"
 server_id = "570967338946527262"
 channel_id = "823996526966734849"
 
-path = "http-data"
+path = "/home/ec2-user/http-data"
 token_path = "/home/ec2-user/dc-token.txt"
 server_log = "server_log.txt"
 msg_log = "msg_log.txt"
 log = "log.txt"
 purged_log = "purged_log.txt"
-
-del_vids_script = "/home/ec2-user/del_vids.sh"
-reload_scirpt = "/home/ec2-user/reload.sh"
 
 purge_time = "03:00"
 
@@ -52,7 +49,9 @@ async def dc_purge():
         
         if str(stundeminute) == purge_time:
             await channel.purge()
-            system("bash " + del_vids_script)
+            for file in os.listdir(path):
+              if file.endswith(".mp4") or file.endswith(".mp3"):
+                   os.remove(path + "/" + file)
             with open(purged_log, "a") as f:
                 f.write(f"{timedate} Auto Purge\n")
             print(timedate + "Auto Purge!")
@@ -109,7 +108,9 @@ async def on_message(msg):
             if str(msg.content).lower() == purge_command:
                 if msg.author.guild_permissions.administrator:
                     await msg.channel.purge()
-                    system("bash " + del_vids_script)
+                    for file in os.listdir(path):
+                       if file.endswith(".mp4") or file.endswith(".mp3"):
+                          os.remove(path + "/" + file)
                     with open(log, "a") as f:
                         f.write(
                             f"{timedate}{msg.author.name} # {msg.author.discriminator} hat {purge_command} ausgeführt!\n")
@@ -144,7 +145,7 @@ async def on_message(msg):
                         await msg.channel.send(command + " <URL>")
 
                     else:
-                        system("bash " + reload_scirpt)
+                        os.system("docker restart httpd")
 
                         url = msg.content.split(' ')[1]
                         yt = pytube.YouTube(url)
