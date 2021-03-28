@@ -11,11 +11,10 @@ timedate = datetime_.strftime('%d.%m.%Y-%H.%M.%S' + ": ")
 
 bot_name = "LcsTh's YT Downloader"
 
-github = "https://github.com/LcsTh0/YT-Downloader-DC-Bot"
-dc_invite = "https://discord.gg/PQwPRDj"
-
 http = "https://"
 ip_domain = "lcsth.de"
+github = http + "bot.lcsth.de"
+dc_invite = http + "dc.lcsth.de"
 
 server_id = "570967338946527262"
 channel_id = "823996526966734849"
@@ -25,6 +24,7 @@ test_channel_id = "825350098603081753"
 path = "/home/ec2-user/http-data"
 token_path = "/home/ec2-user/dc-token.txt"
 server_log = "server_log.txt"
+server_ids = "server_ids.txt"
 msg_log = "msg_log.txt"
 log = "log.txt"
 purged_log = "purged_log.txt"
@@ -102,14 +102,28 @@ async def on_message(msg):
                 title=falscher_discord_nachricht,
                 description="[ApfelPlayer Discord](" + dc_invite + ") | [GitHub](" + github + ")", color=0x00ff26)
             embed.set_footer(text=bot_name)
-            await msg.channel.send(embed=embed)
 
-            logged = "Channel: " + msg.channel.name + "\nBenutzer: " + msg.author.name + "#" + str(
+            logged = str(timedate) + "\nChannel: " + msg.channel.name + "\nBenutzer: " + msg.author.name + "#" + str(
                 msg.author.discriminator) + " (" + str(
                 msg.author.id) + ")\nServer Name: " + msg.guild.name + "\nID: " + str(
                 msg.guild.id) + "\nMitglieder: " + str(msg.guild.member_count) + "\n\n"
-            with open(server_log, "a") as f:
-                f.write(f"{logged}\n")
+                
+            if str(msg.content).lower().startswith("$"):
+                await msg.channel.send(embed=embed)
+            
+            with open(server_ids, "r") as datei:
+                text = datei.read().strip().split()
+                
+                if str(msg.guild.id) in text:
+                    return
+                
+                else:
+                    with open(server_ids, "a") as dateiA:
+                        dateiA.write(str(msg.guild.id) + "\n")
+                        
+                    with open(server_log, "a") as f:
+                        f.write(f"{logged}\n")
+                
 
         else:
             def is_me(m):
@@ -142,6 +156,15 @@ async def on_message(msg):
                 if str(msg.channel.id) != channel_id and str(msg.channel.id) != test_channel_id:
                     if str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command) or str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(help_command2):
                         await msg.channel.purge(limit=1)
+                        
+                        if str(msg.guild.id) == server_id:
+                            text_channel = client.get_channel(int(channel_id))
+                        elif str(msg.guild.id) == test_server_id:
+                            text_channel = client.get_channel(int(test_channel_id))
+                        
+                        await msg.channel.send('{0} Falscher Kanal! Bitte den {1} Kanal benutzen!'.format(msg.author.mention,text_channel.mention))
+                        await asyncio.sleep(5)
+                        await msg.channel.purge(limit=1, check=is_me)
                         return
                     else:
                         return
@@ -151,7 +174,7 @@ async def on_message(msg):
                 if str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(
                         help_command2):
                     await msg.channel.send(command + " <URL>")
-                    await msg.channel.send
+                    
 
 
                 elif str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command):
