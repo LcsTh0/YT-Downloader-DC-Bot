@@ -42,14 +42,16 @@ help_command2 = "$hilfe"
 
 client = discord.Client()
 
+async def del_vids():
+    for file in os.listdir(path):
+        if file.endswith(".mp4") or file.endswith(".mp3"):
+             os.remove(path + "/" + file)
+
 async def purge_all():
     channel = client.get_channel(int(channel_id))
     test_channel = client.get_channel(int(test_channel_id))
     await channel.purge()
     await test_channel.purge()
-    for file in os.listdir(path):
-        if file.endswith(".mp4") or file.endswith(".mp3"):
-            os.remove(path + "/" + file)
 
 async def dc_purge():
     while True:
@@ -58,9 +60,11 @@ async def dc_purge():
 
         if str(stundeminute) == purge_time:
             await purge_all()
+            await del_vids()
             with open(purged_log, "a") as f:
                 f.write(f"{timedate} Auto Purge\n")
             print(timedate + "Auto Purge!")
+            await del_vids()
             await asyncio.sleep(500)
 
         else:
@@ -80,6 +84,7 @@ async def on_ready():
     with open(purged_log, "a") as f:
         f.write(f"{timedate} Start Purge\n")
     print(timedate + "Start Purge!")
+    await del_vids()
     await dc_purge()
 
 
@@ -223,6 +228,7 @@ async def on_message(msg):
                             description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")",
                             color=0x00ff26)
                         embed.set_footer(text=bot_name)
+                        print(msg.channel.send.msg(msg))
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
 
