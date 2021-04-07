@@ -101,6 +101,8 @@ async def on_message(msg):
             with open(msg_log, "a") as f:
                 f.write(f"{timedate + str(msg.channel)} \n")
             print(timedate + str(msg.channel))
+            await asyncio.sleep(5)
+            await msg.channel.purge(limit=1, check=is_me)
 
         elif str(msg.guild.id) != server_id and str(msg.guild.id) != test_server_id:
             embed = discord.Embed(
@@ -114,7 +116,14 @@ async def on_message(msg):
                 msg.guild.id) + "\nMitglieder: " + str(msg.guild.member_count) + "\n\n"
                 
             if str(msg.content).lower().startswith("$"):
+                usr = msg.author
+                def is_user(m):
+                    return m.author == usr
+                        
                 await msg.channel.send(embed=embed)
+                await asyncio.sleep(5)
+                await msg.channel.purge(limit=1, check=is_me)
+                await msg.channel.purge(limit=1, check=is_user)
             
             with open(server_ids, "r") as datei:
                 text = datei.read().strip().split()
@@ -178,13 +187,27 @@ async def on_message(msg):
 
                 if str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(
                         help_command2):
+                    usr = msg.author
+                    def is_user(m):
+                        return m.author == usr
+                    
+                    await msg.channel.purge(limit=1, check=is_user)
                     await msg.channel.send(command + " <URL>")
+                    await asyncio.sleep(5)
+                    await msg.channel.purge(limit=1, check=is_me)
                     
 
 
                 elif str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command):
                     if str(msg.content).lower() == command:
+                        usr = msg.author
+                        def is_user(m):
+                            return m.author == usr
+                        
+                        await msg.channel.purge(limit=1, check=is_user)
                         await msg.channel.send(command + " <URL>")
+                        await asyncio.sleep(5)
+                        await msg.channel.purge(limit=1, check=is_me)
 
                     else:
                         os.system("docker restart httpd")
@@ -192,7 +215,7 @@ async def on_message(msg):
                         def is_user(m):
                             return m.author == usr
 
-                        url = msg.content.split(' ')[1]
+                        url = str(msg.content.split(' ')[1])
                         yt = pytube.YouTube(url)
 
                         with open(log, "a") as f:
@@ -228,7 +251,6 @@ async def on_message(msg):
                             description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")",
                             color=0x00ff26)
                         embed.set_footer(text=bot_name)
-                        print(msg.channel.send.msg(msg))
                         await msg.channel.send(embed=embed)
                         await msg.channel.send("{}".format(msg.author.mention))
 
