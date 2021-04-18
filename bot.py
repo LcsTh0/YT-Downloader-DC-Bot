@@ -90,6 +90,13 @@ async def on_ready():
 
 @client.event
 async def on_message(msg):
+    def is_user(m):
+        return m.author == usr
+    
+    def is_me(m):
+                return m.author == client.user
+    
+    
     if msg.author != client.user:
         if isinstance(msg.channel, discord.channel.DMChannel):
             
@@ -117,8 +124,7 @@ async def on_message(msg):
                 
             if str(msg.content).lower().startswith("$"):
                 usr = msg.author
-                def is_user(m):
-                    return m.author == usr
+                
                         
                 await msg.channel.send(embed=embed)
                 await asyncio.sleep(5)
@@ -140,8 +146,7 @@ async def on_message(msg):
                 
 
         else:
-            def is_me(m):
-                return m.author == client.user
+            
 
             if str(msg.content).lower() == purge_command:
                 if msg.author.guild_permissions.administrator:
@@ -187,10 +192,6 @@ async def on_message(msg):
 
                 if str(msg.content).lower().startswith(help_command) or str(msg.content).lower().startswith(
                         help_command2):
-                    usr = msg.author
-                    def is_user(m):
-                        return m.author == usr
-                    
                     await msg.channel.purge(limit=1, check=is_user)
                     await msg.channel.send(command + " <URL>")
                     await asyncio.sleep(5)
@@ -201,8 +202,6 @@ async def on_message(msg):
                 elif str(msg.content).lower().startswith(command) or str(msg.content).lower().startswith(audio_command):
                     if str(msg.content).lower() == command:
                         usr = msg.author
-                        def is_user(m):
-                            return m.author == usr
                         
                         await msg.channel.purge(limit=1, check=is_user)
                         await msg.channel.send(command + " <URL>")
@@ -212,50 +211,67 @@ async def on_message(msg):
                     else:
                         os.system("docker restart httpd")
                         usr = msg.author
-                        def is_user(m):
-                            return m.author == usr
-
                         url = str(msg.content.split(' ')[1])
                         yt = pytube.YouTube(url)
+                            
+                        zahl = int(yt.length / 60 / 60)
+                        
+                        if zahl != 0:
+                            await msg.channel.purge(check=is_user)
+                            embed = discord.Embed(
+                                title="Video „" + yt.title + "“ von „" + yt.author + "“ ist zu lange um heruntergeladen zu werden. Es sollte unter einer Stunde lang sein",
+                                description="[GitHub](" + github + ")",
+                                color=0x00ff26)
+                            
+                            embed.set_footer(text=bot_name)
+                            await msg.channel.send(embed=embed)
+                            await msg.channel.send("{}".format(msg.author.mention))
+                            
+                            await msg.channel.purge(limit=1, check=is_me)
+                            await asyncio.sleep(5)
+                            await msg.channel.purge(limit=1, check=is_me)
+                            
+                            
+                        else:
+                        
+                            with open(log, "a") as f:
+                                f.write(f"{timedate}Downloading: {yt.title} (Requested by {msg.author.name})\n")
 
-                        with open(log, "a") as f:
-                            f.write(f"{timedate}Downloading: {yt.title} (Requested by {msg.author.name})\n")
+                            print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")")
 
-                        print(timedate + "Downloading: " + yt.title + " (Requested by " + str(msg.author.name) + ")")
+                            await msg.channel.send("Starte Herunterladen {}".format(msg.author.mention))
+                            title_patched = urllib.parse.quote(yt.title).replace("%", "_")
+                            for numbers in title_patched:
+                                if numbers.isdigit():
+                                    title_patched = title_patched.replace(numbers, "")
+                            title_patched = title_patched.replace("/", "_")
+                            title_patched = title_patched.replace("\\", "_")
+                            yt.streams.filter(progressive=True).get_highest_resolution().download(output_path=path,
+                                                                                                filename=title_patched)
 
-                        await msg.channel.send("Starte Herunterladen {}".format(msg.author.mention))
-                        title_patched = urllib.parse.quote(yt.title).replace("%", "_")
-                        for numbers in title_patched:
-                            if numbers.isdigit():
-                                title_patched = title_patched.replace(numbers, "")
-                        title_patched = title_patched.replace("/", "_")
-                        title_patched = title_patched.replace("\\", "_")
-                        yt.streams.filter(progressive=True).get_highest_resolution().download(output_path=path,
-                                                                                              filename=title_patched)
+                            video = moviepy.editor.VideoFileClip(path + "/" + title_patched + ".mp4")
+                            video.audio.write_audiofile(path + "/" + title_patched + ".mp3")
 
-                        video = moviepy.editor.VideoFileClip(path + "/" + title_patched + ".mp4")
-                        video.audio.write_audiofile(path + "/" + title_patched + ".mp3")
+                            with open(log, "a") as f:
+                                f.write(f"{timedate}Done with: {yt.title}\n")
 
-                        with open(log, "a") as f:
-                            f.write(f"{timedate}Done with: {yt.title}\n")
+                            print(timedate + "Done with: " + yt.title)
 
-                        print(timedate + "Done with: " + yt.title)
+                            link = http + ip_domain + "/" + title_patched
 
-                        link = http + ip_domain + "/" + title_patched
+                            await msg.channel.purge(limit=1, check=is_me)
 
-                        await msg.channel.purge(limit=1, check=is_me)
+                            auflösung = yt.streams.filter(progressive=True).get_highest_resolution().resolution
+                            embed = discord.Embed(
+                                title="Video „" + yt.title + "“ von „" + yt.author + "“ heruntergeladen",
+                                description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")",
+                                color=0x00ff26)
+                            embed.set_footer(text=bot_name)
+                            await msg.channel.send(embed=embed)
+                            await msg.channel.send("{}".format(msg.author.mention))
 
-                        auflösung = yt.streams.filter(progressive=True).get_highest_resolution().resolution
-                        embed = discord.Embed(
-                            title="Video „" + yt.title + "“ von „" + yt.author + "“ heruntergeladen",
-                            description="[Video](" + link + ".mp4) (" + auflösung + ") | [Audio](" + link + ".mp3) | [GitHub](" + github + ")",
-                            color=0x00ff26)
-                        embed.set_footer(text=bot_name)
-                        await msg.channel.send(embed=embed)
-                        await msg.channel.send("{}".format(msg.author.mention))
-
-                        await msg.channel.purge(limit=1, check=is_me)
-                        await msg.channel.purge(check=is_user)
+                            await msg.channel.purge(limit=1, check=is_me)
+                            await msg.channel.purge(check=is_user)
 
                 else:
                     return
